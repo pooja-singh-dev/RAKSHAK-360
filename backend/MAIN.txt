@@ -1,0 +1,47 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="Rakshak-360 SafeBrowse API")
+
+# CORS lagana zaruri hai warna extension connect nahi hoga
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Yaha apni saari fake/phishing sites add kar sakta hai
+UNSAFE_URLS = [
+    "phishing.com", 
+    "fake-bank.com", 
+    "malware-test.com",
+    "paypal-login",
+    "test-phishing-site.com",
+    "security-update",
+    "free-money"
+]
+
+@app.get("/")
+def home():
+    return {"message": "Rakshak-360 Backend is Running!"}
+
+@app.get("/check-url")
+def check_url(url: str):
+    # Check if url is in unsafe list
+    for bad_url in UNSAFE_URLS:
+        if bad_url.lower() in url.lower():
+            return {
+                "url": url, 
+                "status": "DANGEROUS", 
+                "reason": f"Found in blacklist: {bad_url}"
+            }
+    
+    return {
+        "url": url, 
+        "status": "SAFE", 
+        "reason": "No threat found"
+    }
+
+# Run with: uvicorn main:app --reload
